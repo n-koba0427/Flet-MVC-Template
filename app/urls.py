@@ -2,6 +2,27 @@ from app.controller import *
 import flet as ft
 import re
 
+# URLs Module
+#
+# This module defines the routing configuration for the application,
+# mapping URL patterns to their corresponding controller functions.
+#
+# Key Components:
+#
+# - routes: A dictionary mapping URL patterns to controller functions.
+# - _convert_route_to_regex(route: str): Converts a route pattern to a regex pattern.
+# - handle_route(page: ft.Page, route: str): Handles routing for the application.
+#
+# Custom Routes:
+# To add a new route, add an entry to the `routes` dictionary:
+#
+# routes = {
+#     # ... existing routes ...
+#     "/your/new/route/<param>": your_controller_function,
+# }
+#
+# Make sure to create the corresponding controller function in `controller.py`.
+
 
 routes = {
     "/data/<model_name>": show_data_list,
