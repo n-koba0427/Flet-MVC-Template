@@ -131,7 +131,7 @@ To extend the framework with your own functionality:
 5. Create custom utility functions in `app/utils.py` as needed
 6. Add reusable UI components in `templates/components.py`
 
-### Creating Custom Components
+### Creating Custom Components and Views
 
 1. Add a new function to `templates/components.py`:
 
@@ -147,7 +147,7 @@ def custom_card(title: str, content: str):
         )
 ```
 
-2. Use this component in your view functions:
+2. Use this component in a view function in `app/views.py`:
 
 ```python
 from templates.components import custom_card
@@ -159,7 +159,33 @@ def custom_view(page: ft.Page, **params):
     ]
 ```
 
-This approach allows you to easily create and reuse custom components while maintaining a consistent UI throughout your application.
+3. Implement a corresponding controller function in `app/controller.py`:
+
+```python
+from app.views import custom_view
+from app.utils import show_page
+
+def custom_controller(page: ft.Page, params):
+    controls = custom_view(page=page, params=params)
+    show_page(
+        page=page,
+        route="/custom",
+        controls=controls
+    )
+```
+
+
+4. Add a new route in `app/urls.py`:
+
+```python
+routes = {
+    "/custom": custom_controller,
+    # Other existing routes...
+}
+```
+
+This approach allows you to easily create and reuse custom components while maintaining a consistent UI throughout your application. By adding new views and controllers and routing them appropriately, you can extend the functionality of your application.
+
 
 ## Contributing
 
