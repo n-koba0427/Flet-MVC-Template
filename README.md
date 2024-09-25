@@ -74,7 +74,7 @@ def your_custom_controller(page: ft.Page, params):
     show_page(
         page=page,
         route="/your/custom/route",
-        controls=controls
+        controls=controls,
     )
 ```
 
@@ -158,10 +158,10 @@ def custom_card(title: str, content: str):
         content=ft.Container(
             content=ft.Column([
                 ft.Text(title, size=20, weight="bold"),
-                ft.Text(content)
-            ])),
-            padding=10
-        )
+                ft.Text(content),
+            ]),
+        ),
+    )
 ```
 
 If you need to use a markdown file, you can use the `customized_markdown` function in `app/utils.py` as shown below:
@@ -182,8 +182,8 @@ def custom_markdown(page: ft.Page, **params):
             filename="your_markdown_file.md",
             patterns={
                 "your_pattern_name": "your_pattern_value",
-            }
-        )
+            },
+        ),
     ]
 ```
 
