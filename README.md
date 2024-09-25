@@ -225,6 +225,39 @@ routes = {
 
 This approach allows you to easily create and reuse custom components while maintaining a consistent UI throughout your application. By adding new views and controllers and routing them appropriately, you can extend the functionality of your application.
 
+## Deployment
+
+### Deploying to Heroku
+
+This project can be easily deployed to Heroku. There are two main methods:
+
+1. Using the Heroku CLI:
+   a. Create a Heroku account and install the Heroku CLI.
+   b. In your project's root directory, run the following commands:
+
+   ````
+   heroku create
+   git push heroku main
+   ```
+
+2. Connecting directly to your GitHub repository:
+   a. Create a Heroku account and go to your Heroku Dashboard.
+   b. Create a new app and go to the "Deploy" tab.
+   c. In the "Deployment method" section, choose "GitHub".
+   d. Connect your GitHub account and select the repository.
+   e. Choose the branch you want to deploy and enable automatic deploys if desired.
+
+Both methods will deploy your Flet-MVC-Template application to Heroku, making it accessible online. The GitHub integration method offers the advantage of automatic deployments whenever you push changes to your repository.
+
+### Sample Application
+
+You can view a live sample of the Flet-MVC-Template in action at the following URL:
+
+[https://flet-mvc-template-03c5ed9c5b93.herokuapp.com/](https://flet-mvc-template-03c5ed9c5b93.herokuapp.com/)
+
+This sample application demonstrates the features and usage of the Flet-MVC-Template, providing a practical example of how to structure and build web applications using this framework.
+
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -232,3 +265,11 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## AI-Assisted Development
+
+This README was created with the assistance of an AI chatbot.
+
+In the process of creating this template, organizing its structure, and documenting it, we utilized ChatGPT to efficiently and systematically produce output. Specifically, we used AI to save time on the overall composition of the article and detailed explanations, while providing clear and concise content. We plan to continue using AI as a support tool for future developments and improvements.
+
+Please note that this section is merely a formal report. If you are interested in the project or have detailed questions about the template, we are more than willing to engage in thorough communication via messages. Feel free to contact us.
