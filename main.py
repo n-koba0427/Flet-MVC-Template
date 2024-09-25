@@ -9,5 +9,7 @@ def main(page: ft.Page):
 
     page.go("/")
     
-ft.app(target=main)
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 5000))
+    ft.app(target=main, port=port)
 
