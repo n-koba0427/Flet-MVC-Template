@@ -42,7 +42,23 @@ def show_404(page: ft.Page, route: str, *args, **kwargs):
     show_page(
         page=page,
         route=route,
-        controls=[ft.Text("404 - Page not found")]
+        controls=error_404_view(page=page),
+    )
+
+
+def show_home(page: ft.Page, **params):
+    show_page(
+        page=page,
+        route="/",
+        controls=home_view(page=page),
+    )
+
+
+def show_model_list(page: ft.Page, **params):
+    show_page(
+        page=page,
+        route="/data",
+        controls=model_list_view(page=page),
     )
 
 

@@ -25,6 +25,8 @@ import re
 
 
 routes = {
+    "/": show_home,
+    "/data": show_model_list,
     "/data/<model_name>": show_data_list,
     "/data/<model_name>/add": show_data_add,
     "/data/<model_name>/edit/<id>": show_data_edit,

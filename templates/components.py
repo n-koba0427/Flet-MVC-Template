@@ -1,6 +1,24 @@
 import flet as ft
 from app.utils import *
 
+# Components Module (Sample)
+#
+# This module contains reusable UI components that can be used across multiple views.
+# Each component function returns a list of Flet controls that define the UI structure.
+#
+# Key Components:
+# - header(page: ft.Page, title: str):
+#   Creates a header component with a title.
+# 
+# - breadcrumbs(page: ft.Page, separator: str=" / ", active_color: str=ft.colors.BLUE, inactive_color: str=ft.colors.GREY, home_content: ft.Control=ft.Icon(ft.icons.HOME)):
+#   Creates a breadcrumbs component with customizable colors and home icon.
+# 
+# - data_lv(page: ft.Page, model_name: str):
+#   Creates a list view for a given model.
+# 
+# - form_lv(page: ft.Page, model_name: str, redirect_to: str, edit_id: str=None):
+#   Creates a form view for adding or editing data of a given model.
+
 
 def header(page: ft.Page, title: str):
     return ft.Container(
@@ -14,6 +32,73 @@ def header(page: ft.Page, title: str):
         padding=20,
         alignment=ft.alignment.center,
     )
+
+
+def breadcrumbs(
+        page: ft.Page,
+        separator: str=" / ",
+        active_color: str=ft.colors.BLUE,
+        inactive_color: str=ft.colors.GREY,
+        home_content: ft.Control=ft.Icon(ft.icons.HOME),
+    ):
+    parts = page.route.strip("/").split("/")
+
+    home_content.color = inactive_color
+    if parts[0] == "":
+        home_content.color = active_color
+
+    crumbs = ft.Row(
+        controls=[
+            ft.Container(
+                content=home_content,
+                on_click=lambda _: page.go("/"),
+                padding=5,
+                border_radius=5,
+            ),
+            ft.Text(separator, color=inactive_color)
+        ],
+        alignment=ft.MainAxisAlignment.START,
+        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+    )
+
+    for i, part in enumerate(parts):
+        if i > 0:
+            crumbs.controls.append(ft.Text(separator, color=inactive_color))
+        
+        crumb_text = ft.Text(
+            part.capitalize(),
+            color=active_color if i == len(parts) - 1 else inactive_color,
+            weight="bold" if i == len(parts) - 1 else "normal",
+        )
+        
+        if i < len(parts) - 1:
+            crumb = ft.Container(
+                content=crumb_text,
+                on_click=lambda _, p=i: page.go("/" + "/".join(parts[:p+1])),
+                padding=5,
+                border_radius=5,
+            )
+        else:
+            crumb = crumb_text
+        
+        crumbs.controls.append(crumb)
+
+    return ft.Container(
+        content=crumbs,
+        padding=10,
+        border=ft.border.all(1, ft.colors.GREY_300),
+        border_radius=5,
+        margin=ft.margin.only(bottom=10),
+    )
+
+
+def customized_markdown(page: ft.Page, filename: str, patterns: dict={}):
+    return ft.Markdown(
+        value=read_markdown_file(filename, patterns),
+        selectable=True,
+        on_tap_link=lambda e: handle_markdown_tap_link(page, e),
+    )
+
 
 def data_lv(page: ft.Page, model_name: str):
     data_list = get_data_list(model_name)
@@ -70,6 +155,7 @@ def data_lv(page: ft.Page, model_name: str):
     )
     lv.controls.append(add_button)
     return lv
+
 
 def form_lv(page: ft.Page, model_name: str, redirect_to: str, edit_id: str=None):
     if exists(edit_id):

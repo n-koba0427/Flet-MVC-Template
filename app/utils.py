@@ -1,5 +1,8 @@
+import os
+import re
 import flet as ft
 from app.models import *
+
 
 # Utilities Module
 #
@@ -41,10 +44,12 @@ def get_items(model_or_data):
             field_value = getattr(model_or_data, field_name)
         yield (field_name, field_value)
 
+def get_registered_models():
+    return {cls.__name__.lower(): cls for cls in BaseModel.__subclasses__()}
+
 def get_model_by_name(model_name):
     if isinstance(model_name, str):
-        model_classes = {cls.__name__.lower(): cls for cls in BaseModel.__subclasses__()}
-        return model_classes.get(model_name.lower(), None)
+        return get_registered_models().get(model_name.lower(), None)
     return model_name
 
 # data manipulation
@@ -89,7 +94,20 @@ def delete_data(model_name, id):
 
 
 # views
+def handle_markdown_tap_link(page, e):
+    page.go(e.data)
 
+def read_markdown_file(filename: str, patterns: dict):
+    file_path = os.path.join('templates', 'markdown', filename)
+    with open(file_path, 'r', encoding='utf-8') as file:
+        content = file.read()
+    
+    # 二重中括弧で囲まれたプレースホルダーを置換
+    for key, value in patterns.items():
+        pattern = r'%%' + re.escape(key) + r'%%'
+        content = re.sub(pattern, str(value), content)
+    
+    return content
 
 # controller
 

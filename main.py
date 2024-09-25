@@ -7,7 +7,7 @@ def main(page: ft.Page):
     page.reload = lambda: handle_route(page, page.route) 
     page.theme_color = ft.colors.GREEN_ACCENT_200
 
-    page.go("/data/user")
+    page.go("/")
     
 ft.app(target=main)
 
