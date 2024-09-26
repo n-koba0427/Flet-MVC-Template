@@ -16,6 +16,7 @@ import hashlib
 import os
 from app.utils import *
 
+
 # Base Authentication
 class Auth:
     """

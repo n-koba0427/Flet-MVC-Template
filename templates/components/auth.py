@@ -13,7 +13,7 @@ import flet as ft
 from app.utils import *
 
 
-def login_form(page: ft.Page):
+def login_form(page: ft.Page, redirect_to: str="/"):
     username = ft.TextField(
         value="user",
         label="Username",
@@ -39,9 +39,13 @@ def login_form(page: ft.Page):
         
         result = page.custom_auth.verify_password(username.value, password.value)
         user = result["user"]
-        print(f"User Object: {type(user)}")
         if exists(user):
             page.open(ft.SnackBar(content=ft.Text("Login successful")))
+            page.session.set("user", user)
+            if page.route == "/login":
+                page.go(redirect_to)
+            else:
+                page.reload()
         else:
             page.open(ft.SnackBar(content=ft.Text("Login failed")))
 

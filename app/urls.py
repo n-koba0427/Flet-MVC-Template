@@ -31,6 +31,7 @@ routes = {
     "/data/<model_name>/add": show_data_add,
     "/data/<model_name>/edit/<id>": show_data_edit,
     "/login": show_login,
+    "/sample-apps": show_sample_apps,
 }
 
 def _convert_route_to_regex(route: str):

@@ -35,6 +35,8 @@ and add the new route to the `routes` dictionary in `urls.py`.
 import flet as ft
 from templates.components.basic import *
 from templates.components.auth import *
+from app.utils import *
+
 
 
 def error_404_view(page: ft.Page):
@@ -122,4 +124,12 @@ def login_view(page: ft.Page):
         header(page=page, title="Login"),
         breadcrumbs(page=page),
         login_form(page=page),
+    ]
+
+@authenticate
+def sample_apps_view(page: ft.Page):
+    return [
+        header(page=page, title="Sample Apps"),
+        breadcrumbs(page=page),
+        ft.Text("Sample Apps"),
     ]

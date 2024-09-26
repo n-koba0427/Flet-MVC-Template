@@ -112,3 +112,11 @@ def show_login(page: ft.Page, **params):
         route="/login",
         controls=controls,
     )
+
+def show_sample_apps(page: ft.Page, **params):
+    controls = sample_apps_view(page=page)
+    show_page(
+        page=page,
+        route="/sample-apps",
+        controls=controls,
+    )
