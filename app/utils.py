@@ -60,11 +60,17 @@ def get_data_list(model_name):
         return model.select()
     return None
 
-def get_data_by_id(model_name, id):
+def search_data(model_name, key, value):
     model = get_model_by_name(model_name)
     if exists(model):
-        return model.select().where(model.id==id).get()
+        try:
+            return model.select().where(getattr(model, key) == value)
+        except:
+            return None
     return None
+
+def get_data_by_id(model_name, id):
+    return search_data(model_name, "id", id).get()
 
 def add_data(model_name, data_dict):
     model = get_model_by_name(model_name)

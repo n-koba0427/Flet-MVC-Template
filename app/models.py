@@ -43,5 +43,15 @@ class Task(BaseModel):
     is_done = BooleanField(default=False)
     created_by = ForeignKeyField(User, backref='tasks')
 
+class Summoner(BaseModel):
+    region = CharField()
+    summoner_name = CharField()
+    tag = CharField()
+    player_icon = CharField()
+    rank = CharField()
+    lp = CharField()
+    score = CharField()
+    is_active = BooleanField(default=True)
+    
 db.connect()
-db.create_tables([User, Task])
+db.create_tables([User, Task, Summoner])

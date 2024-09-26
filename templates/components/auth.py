@@ -15,13 +15,13 @@ from app.utils import *
 
 def login_form(page: ft.Page, redirect_to: str="/"):
     username = ft.TextField(
-        value="user",
+        # value="user",
         label="Username",
         autofocus=True,
         prefix_icon=ft.icons.PERSON,
     )
     password = ft.TextField(
-        value="userp@ss",
+        # value="userp@ss",
         label="Password",
         password=True,
         prefix_icon=ft.icons.LOCK,

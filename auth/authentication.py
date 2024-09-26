@@ -28,12 +28,7 @@ class Auth:
     """
     
     def get_user(self, username: str):
-        user_model = get_model_by_name("user")
-        try:
-            user = user_model.select().where(user_model.username == username).get()
-        except user_model.DoesNotExist:
-            user = None
-        return user
+        return search_data("user", "username", username).get()
     
     def add_user(self, data_dict: dict):
         data_dict = self._get_data_dict(data_dict)

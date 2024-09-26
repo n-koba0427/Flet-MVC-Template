@@ -7,14 +7,15 @@ from app.views import *
 def main(page: ft.Page):
     page.on_route_change = lambda e: handle_route(page, e.route)
     page.reload = lambda: handle_route(page, page.route) 
-    page.theme_color = ft.colors.GREEN_ACCENT_200
-    page.bgcolor = ft.colors.BLUE_GREY_100
+    # page.theme_color = ft.colors.PRIMARY_CONTAINER
+    # page.bgcolor = ft.colors.ON_PRIMARY
+    page.theme = ft.Theme(color_scheme_seed='green')
     page.custom_auth = SaltedHashAuth()
     page.sample_apps = {
         "lol-custom-organizer": lol_custom_organizer_view,
     }
 
-    page.go("/")
+    page.go("/sample-apps/lol-custom-organizer")
     
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))

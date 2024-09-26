@@ -31,7 +31,7 @@ def header(page: ft.Page, title: str):
             ],
             wrap=True,
         ),
-        bgcolor=page.theme_color,
+        bgcolor=ft.colors.PRIMARY,
         padding=20,
         alignment=ft.alignment.center,
     )
