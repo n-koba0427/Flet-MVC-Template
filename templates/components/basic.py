@@ -1,23 +1,26 @@
+"""
+Basic Components Module
+
+This module contains reusable UI components that can be used across multiple views.
+Each component function returns a list of Flet controls that define the UI structure.
+
+Key Components:
+- header(page: ft.Page, title: str):
+  Creates a header component with a title.
+
+- breadcrumbs(page: ft.Page, separator: str=" / ", active_color: str=ft.colors.BLUE, inactive_color: str=ft.colors.GREY, home_content: ft.Control=ft.Icon(ft.icons.HOME)):
+  Creates a breadcrumbs component with customizable colors and home icon.
+
+- data_lv(page: ft.Page, model_name: str):
+  Creates a list view for a given model.
+
+- form_lv(page: ft.Page, model_name: str, redirect_to: str, edit_id: str=None):
+  Creates a form view for adding or editing data of a given model.
+"""
+
+
 import flet as ft
 from app.utils import *
-
-# Components Module (Sample)
-#
-# This module contains reusable UI components that can be used across multiple views.
-# Each component function returns a list of Flet controls that define the UI structure.
-#
-# Key Components:
-# - header(page: ft.Page, title: str):
-#   Creates a header component with a title.
-# 
-# - breadcrumbs(page: ft.Page, separator: str=" / ", active_color: str=ft.colors.BLUE, inactive_color: str=ft.colors.GREY, home_content: ft.Control=ft.Icon(ft.icons.HOME)):
-#   Creates a breadcrumbs component with customizable colors and home icon.
-# 
-# - data_lv(page: ft.Page, model_name: str):
-#   Creates a list view for a given model.
-# 
-# - form_lv(page: ft.Page, model_name: str, redirect_to: str, edit_id: str=None):
-#   Creates a form view for adding or editing data of a given model.
 
 
 def header(page: ft.Page, title: str):
@@ -174,7 +177,7 @@ def form_lv(page: ft.Page, model_name: str, redirect_to: str, edit_id: str=None)
     )
     
     for field_name, field_value in get_items(model_or_data):
-        if field_name != "id":
+        if field_name not in ["id", "salt"]:
             lv.controls.append(
                 ft.TextField(
                     label=field_name,
@@ -197,7 +200,10 @@ def form_lv(page: ft.Page, model_name: str, redirect_to: str, edit_id: str=None)
             if exists(edit_id):
                 update_data(model_name, edit_id, data_dict)
             else:
-                add_data(model_name, data_dict)
+                if model_name == "user":
+                    page.custom_auth.add_user(data_dict)
+                else:
+                    add_data(model_name, data_dict)
             page.go(redirect_to)
         else:
             dialog = ft.AlertDialog(
@@ -219,3 +225,4 @@ def form_lv(page: ft.Page, model_name: str, redirect_to: str, edit_id: str=None)
     
     lv.controls.append(submit_button)
     return lv
+

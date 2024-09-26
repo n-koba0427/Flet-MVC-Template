@@ -35,6 +35,7 @@ class BaseModel(Model):
 class User(BaseModel):
     username = CharField(unique=True)
     password = CharField()
+    salt = CharField()
     
 class Task(BaseModel):
     title = CharField(100)
