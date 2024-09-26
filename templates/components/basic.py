@@ -226,3 +226,14 @@ def form_lv(page: ft.Page, model_name: str, redirect_to: str, edit_id: str=None)
     lv.controls.append(submit_button)
     return lv
 
+
+def sample_apps_lv(page: ft.Page):
+    sample_apps_lv = ft.ListView(expand=True, spacing=10)
+    for app_name, _ in page.sample_apps.items():
+        sample_apps_lv.controls.append(
+            ft.ElevatedButton(
+                text=app_name,
+                on_click=lambda e: page.go(f"/sample-apps/{app_name}"),
+            )
+        )
+    return sample_apps_lv

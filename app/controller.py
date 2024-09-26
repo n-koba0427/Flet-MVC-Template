@@ -105,11 +105,20 @@ def show_data_edit(page: ft.Page, **params):
         controls=controls,
     )
 
+
 def show_login(page: ft.Page, **params):
     controls = login_view(page=page)
     show_page(
         page=page,
         route="/login",
+        controls=controls,
+    )
+
+def show_user_page(page: ft.Page, **params):
+    controls = user_page_view(page=page)
+    show_page(
+        page=page,
+        route="/user_page",
         controls=controls,
     )
 
@@ -120,3 +129,16 @@ def show_sample_apps(page: ft.Page, **params):
         route="/sample-apps",
         controls=controls,
     )
+
+def show_app(page: ft.Page, **params):
+    app_name = params["app_name"]
+    if app_name not in page.sample_apps:
+        show_404(page=page, route=f"/sample-apps/{app_name}")
+        return
+
+    show_page(
+        page=page,
+        route=f"/sample-apps/{app_name}",
+        controls=page.sample_apps[app_name](page=page),
+    )
+

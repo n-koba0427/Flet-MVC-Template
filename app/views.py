@@ -35,8 +35,8 @@ and add the new route to the `routes` dictionary in `urls.py`.
 import flet as ft
 from templates.components.basic import *
 from templates.components.auth import *
+from templates.components import lol_custom_organizer
 from app.utils import *
-
 
 
 def error_404_view(page: ft.Page):
@@ -126,10 +126,28 @@ def login_view(page: ft.Page):
         login_form(page=page),
     ]
 
+
 @authenticate
+def user_page_view(page: ft.Page):
+    user = page.session.get("user")
+    return [
+        header(page=page, title=f"Hello, {user.username}"),
+        breadcrumbs(page=page),
+        ft.Text(f"Hello, {user.username}"),
+    ]
+
+
 def sample_apps_view(page: ft.Page):
     return [
         header(page=page, title="Sample Apps"),
         breadcrumbs(page=page),
-        ft.Text("Sample Apps"),
+        sample_apps_lv(page=page),
+    ]
+
+
+def lol_custom_organizer_view(page: ft.Page):
+    return [
+        header(page=page, title="LoL Custom Organizer"),
+        breadcrumbs(page=page),
+        lol_custom_organizer.main(page=page),
     ]

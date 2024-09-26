@@ -1,6 +1,7 @@
 import flet as ft
 from app.urls import *
 from auth.authentication import *
+from app.views import *
 
 
 def main(page: ft.Page):
@@ -9,6 +10,9 @@ def main(page: ft.Page):
     page.theme_color = ft.colors.GREEN_ACCENT_200
     page.bgcolor = ft.colors.BLUE_GREY_100
     page.custom_auth = SaltedHashAuth()
+    page.sample_apps = {
+        "lol-custom-organizer": lol_custom_organizer_view,
+    }
 
     page.go("/")
     

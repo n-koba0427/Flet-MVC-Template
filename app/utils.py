@@ -110,16 +110,15 @@ def read_markdown_file(filename: str, patterns: dict):
     
     return content
 
-
 # authentication
 def authenticate(view_function):
     def wrapper(*args, **kwargs):
         page = kwargs["page"]
-        if page.session.get("user"):
+        if exists(page.session.get("user")):
             return view_function(*args, **kwargs)
         else:
             from app.views import login_view
-            return login_view(page)
+            return login_view(page=page)
     return wrapper
 
 

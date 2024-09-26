@@ -31,7 +31,9 @@ routes = {
     "/data/<model_name>/add": show_data_add,
     "/data/<model_name>/edit/<id>": show_data_edit,
     "/login": show_login,
+    "/user_page": show_user_page,
     "/sample-apps": show_sample_apps,
+    "/sample-apps/<app_name>": show_app,
 }
 
 def _convert_route_to_regex(route: str):
@@ -43,6 +45,6 @@ def handle_route(page: ft.Page, route: str):
         match = re.match(f"^{regex_pattern}$", route)
         if match:
             params = match.groupdict()
-            controller(page, **params)
+            controller(page=page, **params)
             return
-    show_404(page, route)
+    show_404(page=page, route=route)
