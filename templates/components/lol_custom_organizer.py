@@ -102,7 +102,7 @@ def _get_active_summoners():
     return search_data("Summoner", "is_active", True)
 
 
-def _grouping(page: ft.Page, top_n: int = 10):
+def _grouping(page: ft.Page, top_n: int = 5):
     active_summoners = _get_active_summoners()
     if len(active_summoners) != 10:
         page.open(ft.SnackBar(content=ft.Text("10 active summoners are required.")))
@@ -113,6 +113,7 @@ def _grouping(page: ft.Page, top_n: int = 10):
     # Generate all possible combinations of 5 summoners
     all_combinations = list(itertools.combinations(summoners, 5))
 
+    unique_combinations = set()
     top_combinations = []
 
     # Calculate score differences for all combinations
@@ -122,27 +123,23 @@ def _grouping(page: ft.Page, top_n: int = 10):
         team1_score = sum(s[1] for s in team1)
         team2_score = sum(s[1] for s in team2)
         diff = abs(team1_score - team2_score)
-        top_combinations.append((diff, (team1, team2)))
+        
+        unique_key = tuple(sorted([tuple(sorted(s[0].summoner_name for s in team1)), 
+                                   tuple(sorted(s[0].summoner_name for s in team2))]))
+        
+        if unique_key not in unique_combinations:
+            unique_combinations.add(unique_key)
+            top_combinations.append((diff, (team1, team2)))
 
     # Sort combinations by score difference and select top n
     top_combinations.sort(key=lambda x: x[0])
-    top_n = min(top_n, len(top_combinations))  # Ensure top_n doesn't exceed available combinations
+    top_n = min(top_n, len(top_combinations))
     top_n_combinations = top_combinations[:top_n]
 
-    # Randomly choose one combination from the top n
-    _, best_combination = random.choice(top_n_combinations)
-    
-    blue_team, red_team = best_combination
-    # Ensure blue team has lower total score
-    if sum(s[1] for s in blue_team) > sum(s[1] for s in red_team):
-        blue_team, red_team = red_team, blue_team
-
-    # Shuffle members within each team
-    random.shuffle(blue_team)
-    random.shuffle(red_team)
-
-    
-    def _copy_clipboard(e):
+    def _copy_clipboard(e, combination):
+        blue_team, red_team = combination
+        if sum(s[1] for s in blue_team) > sum(s[1] for s in red_team):
+            blue_team, red_team = red_team, blue_team
         result_txt = f"""
 【Blue Team】 (Score: {sum(s[1] for s in blue_team)})
 {"\n".join([f"• {s[0].summoner_name} ({s[0].rank}, {s[0].lp}LP, Score: {s[1]})" for s in blue_team])}
@@ -153,14 +150,9 @@ def _grouping(page: ft.Page, top_n: int = 10):
         page.set_clipboard(result_txt)
         page.open(ft.SnackBar(content=ft.Text("Copied to clipboard")))
 
-
     # Display results
-    icon_size = 16
-    if page.width < 1000:
-        layout = ft.ListView(expand=True)
-    else:
-        layout = ft.Row(expand=True, wrap=True, alignment=ft.MainAxisAlignment.CENTER)
     def _create_team_container(team_members, color_name, color_code, color_code_2):
+        icon_size = 16
         return ft.Container(
             content=ft.Column([
                 ft.Text(color_name, size=20, color=color_code),
@@ -189,20 +181,46 @@ def _grouping(page: ft.Page, top_n: int = 10):
             border_radius=10,
             width=page.width*0.4,
         )
-    layout.controls = [
-        _create_team_container(blue_team, "Blue Team", ft.colors.BLUE, ft.colors.BLUE_100),
-        _create_team_container(red_team, "Red Team", ft.colors.RED, ft.colors.RED_100),
-    ]
+
+    def create_team_view(combination):
+        blue_team, red_team = combination
+        if sum(s[1] for s in blue_team) > sum(s[1] for s in red_team):
+            blue_team, red_team = red_team, blue_team
+        random.shuffle(blue_team)
+        random.shuffle(red_team)
+        if page.width < 1000:
+            layout = ft.ListView(expand=True)
+        else:
+            layout = ft.Row(expand=True, wrap=True, alignment=ft.MainAxisAlignment.CENTER)
+        layout.controls = [
+            _create_team_container(blue_team, "Blue Team", ft.colors.BLUE, ft.colors.BLUE_100),
+            _create_team_container(red_team, "Red Team", ft.colors.RED, ft.colors.RED_100),
+        ]
+        return ft.Column([
+            layout,
+            ft.ElevatedButton("Copy to Clipboard", on_click=lambda e, c=combination: _copy_clipboard(e, c)),
+        ])
+
+    tabs = ft.Tabs(
+        selected_index=0,
+        animation_duration=300,
+        tabs=[
+            ft.Tab(
+                text=f"Combination {i+1}",
+                content=create_team_view(combination[1])
+            ) for i, combination in enumerate(top_n_combinations)
+        ],
+    )
+
     result_dialog = ft.AlertDialog(
-        title=ft.Text("Team Grouping Result", size=24, weight="bold"),
+        title=ft.Text(f"Team Grouping Result (Top {top_n})", size=24, weight="bold"),
         content=ft.Container(
-            content=layout,
+            content=tabs,
             padding=20,
             width=page.width,
-            height=page.height*0.5,
+            height=page.height*0.7,
         ),
         actions=[
-            ft.TextButton("Copy Clipboard", on_click=_copy_clipboard),
             ft.TextButton("Close", on_click=lambda _: page.close(result_dialog)),
         ],
     )
