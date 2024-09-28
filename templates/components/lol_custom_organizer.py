@@ -13,7 +13,6 @@ def _calculate_score(rank: str, lp: str):
     tire, division = rank.split(" ")
     return (tires.index(tire) * 4 + (4-int(division))) * 100 + int(lp)
 
-
 def _get_summoner_max_score(region: str="jp", summoner_name: str="naoyashiyashi", tag: str="JP1"):
     url = f'https://www.op.gg/summoners/{region}/{summoner_name}-{tag}'
     response = requests.get(url)
@@ -38,13 +37,30 @@ def _get_summoner_max_score(region: str="jp", summoner_name: str="naoyashiyashi"
                 max_lp = lp.text
     return player_icon, max_rank, max_lp, max_score
 
+def _get_summoner_champs(region: str="jp", summoner_name: str="naoyashiyashi", tag: str="JP1", top_n: int=10):
+    url = f"https://www.op.gg/summoners/{region}/{summoner_name}-{tag}/mastery"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    champs = soup.find_all('div', class_='e1poynyt1')[:top_n]
+    champs_img = []
+    champs_point = []
+    champs_name = []
+    for champ in champs:
+        champ_name = champ.find(class_="champion-name").text
+        champ_point = champ.find(class_="champion-point").text
+        champs_point.append(champ_point)
+        champs_name.append(champ_name)
+    champs_name = "|".join(champs_name)
+    champs_point = "|".join(champs_point)
+    return champs_name, champs_point
+
 def _change_summoner_status(e, page: ft.Page, summoner: Summoner):
     summoner.is_active = e.control.value
     summoner.save()
     page.reload()
 
 def _member_card(page: ft.Page, summoner: Summoner):
-    _card = ft.Container(
+    title = ft.Container(
         content=ft.Row(
             controls=[
                 ft.Row( 
@@ -72,9 +88,32 @@ def _member_card(page: ft.Page, summoner: Summoner):
         border_radius=ft.border_radius.all(10),
         padding=ft.padding.all(10),
     )
-
+    champs_name = summoner.champs_name.split("|")
+    champs_point = summoner.champs_point.split("|")
+    _card = ft.ExpansionTile(
+        title=title,
+        controls=[
+            ft.Row(
+                controls=[
+                    ft.Column(
+                        controls=[
+                            ft.Image(
+                                src=f"https://opgg-static.akamaized.net/meta/images/lol/latest/champion/{champ_name.replace(" ", "").replace("'", "")}.png?image=e_upscale,c_crop,h_103,w_103,x_9,y_9/q_auto:good,f_webp,w_160,h_160&v=1724034092925",
+                                width=40,
+                                height=40,
+                                border_radius=ft.border_radius.all(5),
+                            ),
+                            ft.Text(champ_name),
+                            ft.Text(champ_point),
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER
+                    ) for champ_name, champ_point in zip(champs_name, champs_point)
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+            ),
+        ],
+    )
     return _card
-
 
 def _add_summoner(region: str, summoner_name: str, tag: str):
         player_icon, max_rank, max_lp, max_score = _get_summoner_max_score(
@@ -82,6 +121,7 @@ def _add_summoner(region: str, summoner_name: str, tag: str):
             summoner_name=summoner_name,
             tag=tag
         )
+        champs_name, champs_point = _get_summoner_champs(region, summoner_name, tag, top_n=10)
         if exists(player_icon):
             add_data(
                 model_name="Summoner",
@@ -93,6 +133,8 @@ def _add_summoner(region: str, summoner_name: str, tag: str):
                     "rank": max_rank,
                     "lp": str(max_lp),
                     "score": str(max_score),
+                    "champs_name": champs_name,
+                    "champs_point": champs_point,
                 }
             )
             return True
@@ -100,7 +142,6 @@ def _add_summoner(region: str, summoner_name: str, tag: str):
 
 def _get_active_summoners():
     return search_data("Summoner", "is_active", True)
-
 
 def _grouping(page: ft.Page, top_n: int = 5):
     active_summoners = _get_active_summoners()
@@ -285,7 +326,6 @@ def main(page: ft.Page):
             ),
         ],
         expand=True,
-        spacing=10
     )
 
     for summoner in get_data_list("Summoner"):

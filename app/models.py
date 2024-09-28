@@ -52,6 +52,8 @@ class Summoner(BaseModel):
     lp = CharField()
     score = CharField()
     is_active = BooleanField(default=True)
+    champs_name = CharField()
+    champs_point = CharField()
     
 db.connect()
 db.create_tables([User, Task, Summoner])
