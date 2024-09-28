@@ -15,7 +15,7 @@ def main(page: ft.Page):
         "lol-custom-organizer": lol_custom_organizer_view,
     }
 
-    page.go("")
+    page.go("/sample-apps/lol-custom-organizer")
     
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
