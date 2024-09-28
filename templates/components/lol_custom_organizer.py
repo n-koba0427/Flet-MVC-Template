@@ -8,8 +8,10 @@ from app.utils import *
 
 def _calculate_score(rank: str, lp: str):
     tires = ["iron", "bronze", "silver", "gold", "platinum", "emerald", "diamond", "master", "grandmaster", "challenger"]
+    if rank in ["master", "grandmaster", "challenger"]:
+        rank += " 4"
     tire, division = rank.split(" ")
-    return (tires.index(tire) * 4 + int(division) - 1) * 100 + int(lp)
+    return (tires.index(tire) * 4 + (4-int(division))) * 100 + int(lp)
 
 
 def _get_summoner_max_score(region: str="jp", summoner_name: str="naoyashiyashi", tag: str="JP1"):
@@ -21,6 +23,9 @@ def _get_summoner_max_score(region: str="jp", summoner_name: str="naoyashiyashi"
     max_score = 0
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
+        error_msg = soup.find('div', class_='e19vm62i1')
+        if error_msg:
+            return None, None, None, None
         player_icon = soup.find('div', class_='profile-icon').find("img").get("src")
         rank_info = soup.find('div', class_='e15k6o3w0').find("tbody")
         rank_list = rank_info.find_all("div", class_="rank-item")
@@ -77,18 +82,21 @@ def _add_summoner(region: str, summoner_name: str, tag: str):
             summoner_name=summoner_name,
             tag=tag
         )
-        add_data(
-            model_name="Summoner",
-            data_dict={
-                "region": region,
-                "summoner_name": summoner_name,
-                "tag": tag,
-                "player_icon": player_icon,
-                "rank": max_rank,
-                "lp": str(max_lp),
-                "score": str(max_score),
-            }
-        )
+        if exists(player_icon):
+            add_data(
+                model_name="Summoner",
+                data_dict={
+                    "region": region,
+                    "summoner_name": summoner_name,
+                    "tag": tag,
+                    "player_icon": player_icon,
+                    "rank": max_rank,
+                    "lp": str(max_lp),
+                    "score": str(max_score),
+                }
+            )
+            return True
+        return False
 
 def _get_active_summoners():
     return search_data("Summoner", "is_active", True)
@@ -133,69 +141,68 @@ def _grouping(page: ft.Page, top_n: int = 10):
     random.shuffle(blue_team)
     random.shuffle(red_team)
 
+    
+    def _copy_clipboard(e):
+        result_txt = f"""
+【Blue Team】 (Score: {sum(s[1] for s in blue_team)})
+{"\n".join([f"• {s[0].summoner_name} ({s[0].rank}, {s[0].lp}LP, Score: {s[1]})" for s in blue_team])}
+
+【Red Team】 (Score: {sum(s[1] for s in red_team)})
+{"\n".join([f"• {s[0].summoner_name} ({s[0].rank}, {s[0].lp}LP, Score: {s[1]})" for s in red_team])}
+"""
+        page.set_clipboard(result_txt)
+        page.open(ft.SnackBar(content=ft.Text("Copied to clipboard")))
+
+
     # Display results
+    icon_size = 16
+    if page.width < 1000:
+        layout = ft.ListView(expand=True)
+    else:
+        layout = ft.Row(expand=True, wrap=True, alignment=ft.MainAxisAlignment.CENTER)
+    def _create_team_container(team_members, color_name, color_code, color_code_2):
+        return ft.Container(
+            content=ft.Column([
+                ft.Text(color_name, size=20, color=color_code),
+                ft.Text(f"Total Score: {sum(s[1] for s in team_members)}", size=icon_size),
+                ft.Column([
+                    ft.Container(
+                        content=ft.Row(
+                            controls=[
+                                ft.Image(
+                                    src=s[0].player_icon,
+                                    width=icon_size,
+                                    height=icon_size,
+                                    border_radius=ft.border_radius.all(icon_size//2),
+                                ),
+                                ft.Text(f"{s[0].summoner_name} ({s[0].rank}, {s[0].lp}LP, Score: {s[1]})", size=icon_size),
+                            ],
+                        ),
+                        bgcolor=ft.colors.GREY_100,
+                        border_radius=5,
+                        padding=5,
+                    ) for s in team_members
+                ]),
+            ]),
+            padding=10,
+            bgcolor=color_code_2,
+            border_radius=10,
+            width=page.width*0.4,
+        )
+    layout.controls = [
+        _create_team_container(blue_team, "Blue Team", ft.colors.BLUE, ft.colors.BLUE_100),
+        _create_team_container(red_team, "Red Team", ft.colors.RED, ft.colors.RED_100),
+    ]
     result_dialog = ft.AlertDialog(
         title=ft.Text("Team Grouping Result", size=24, weight="bold"),
         content=ft.Container(
-            content=ft.Row([
-                ft.Container(
-                    content=ft.Column([
-                        ft.Text("Blue Team", size=20, color=ft.colors.BLUE),
-                        ft.Text(f"Total Score: {sum(s[1] for s in blue_team)}", size=16),
-                        ft.Column([
-                            ft.Container(
-                                content=ft.Row(
-                                    controls=[
-                                        ft.Image(
-                                            src=s[0].player_icon,
-                                            width=14,
-                                            height=14,
-                                            border_radius=ft.border_radius.all(7),
-                                        ),
-                                        ft.Text(f"{s[0].summoner_name} ({s[0].rank}, {s[0].lp}LP, Score: {s[1]})", size=14),
-                                    ],
-                                ),
-                                bgcolor=ft.colors.BLUE_50,
-                                border_radius=5,
-                                padding=5,
-                            ) for s in blue_team
-                        ]),
-                    ]),
-                    padding=10,
-                    bgcolor=ft.colors.BLUE_100,
-                    border_radius=10,
-                ),
-                ft.Container(
-                    content=ft.Column([
-                        ft.Text("Red Team", size=20, color=ft.colors.RED),
-                        ft.Text(f"Total Score: {sum(s[1] for s in red_team)}", size=16),
-                        ft.Column([
-                            ft.Container(
-                                content=ft.Row(
-                                    controls=[
-                                        ft.Image(
-                                            src=s[0].player_icon,
-                                            width=14,
-                                            height=14,
-                                            border_radius=ft.border_radius.all(7),
-                                        ),
-                                        ft.Text(f"{s[0].summoner_name} ({s[0].rank}, {s[0].lp}LP, Score: {s[1]})", size=14),
-                                    ],
-                                ),
-                                bgcolor=ft.colors.BLUE_50,
-                                border_radius=5,
-                                padding=5,
-                            ) for s in red_team
-                        ]),
-                    ]),
-                    padding=10,
-                    bgcolor=ft.colors.RED_100,
-                    border_radius=10,
-                ),
-            ]),
+            content=layout,
             padding=20,
+            width=page.width,
+            height=page.height*0.5,
         ),
         actions=[
+            ft.TextButton("Copy Clipboard", on_click=_copy_clipboard),
             ft.TextButton("Close", on_click=lambda _: page.close(result_dialog)),
         ],
     )
@@ -203,7 +210,6 @@ def _grouping(page: ft.Page, top_n: int = 10):
 
 
 def main(page: ft.Page):
-
     def _open_form(e):
         region_field = ft.TextField(label="Region", value="jp", width=100)
         summoner_name_field = ft.TextField(label="Summoner Name", width=250)
@@ -230,10 +236,16 @@ def main(page: ft.Page):
         )
         def _on_ok(e):
             region, summoner_name, tag = region_field.value, summoner_name_field.value, tag_field.value
-            if all([region, summoner_name, tag]):
-                _add_summoner(region, summoner_name, tag)
+            if search_data_multiple("Summoner", {"region": region, "summoner_name": summoner_name, "tag": tag}):
                 page.close(dlg)
-                page.reload()
+                page.open(ft.SnackBar(content=ft.Text("Summoner already exists.")))
+                return
+            if all([region, summoner_name, tag]):
+                page.close(dlg)
+                if _add_summoner(region, summoner_name, tag):
+                    page.reload()
+                else:
+                    page.open(ft.SnackBar(content=ft.Text("Summoner not found.")))
             else:
                 page.open(ft.SnackBar(content=ft.Text("Please enter all fields")))
         def _close_dlg(e):
@@ -265,3 +277,5 @@ def main(page: ft.Page):
 
     return member_cards
     
+if __name__ == "__main__":
+    print(_calculate_score("master 4", 0))

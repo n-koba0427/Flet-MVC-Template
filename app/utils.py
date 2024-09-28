@@ -69,6 +69,18 @@ def search_data(model_name, key, value):
             return None
     return None
 
+def search_data_multiple(model_name, search_dict):
+    model = get_model_by_name(model_name)
+    if exists(model):
+        try:
+            query = model.select()
+            for key, value in search_dict.items():
+                query = query.where(getattr(model, key) == value)
+            return query
+        except:
+            return None
+    return None
+
 def get_data_by_id(model_name, id):
     return search_data(model_name, "id", id).get()
 
