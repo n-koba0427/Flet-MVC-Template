@@ -10,6 +10,8 @@ def main(page: ft.Page):
     # page.theme_color = ft.colors.PRIMARY_CONTAINER
     # page.bgcolor = ft.colors.ON_PRIMARY
     page.theme = ft.Theme(color_scheme_seed='green')
+    page.theme_mode = ft.ThemeMode.LIGHT
+
     page.custom_auth = SaltedHashAuth()
     page.sample_apps = {
         "lol-custom-organizer": lol_custom_organizer_view,
