@@ -99,17 +99,18 @@ def _member_card(page: ft.Page, summoner: Summoner):
                         controls=[
                             ft.Image(
                                 src=f"https://opgg-static.akamaized.net/meta/images/lol/latest/champion/{champ_name.replace(" ", "").replace("'", "")}.png?image=e_upscale,c_crop,h_103,w_103,x_9,y_9/q_auto:good,f_webp,w_160,h_160&v=1724034092925",
-                                width=40,
-                                height=40,
+                                width=50,
+                                height=50,
                                 border_radius=ft.border_radius.all(5),
                             ),
-                            ft.Text(champ_name),
+                            # ft.Text(champ_name),
                             ft.Text(champ_point),
                         ],
                         alignment=ft.MainAxisAlignment.CENTER
                     ) for champ_name, champ_point in zip(champs_name, champs_point)
                 ],
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+                alignment=ft.MainAxisAlignment.CENTER,
+                spacing=20,
             ),
         ],
     )
