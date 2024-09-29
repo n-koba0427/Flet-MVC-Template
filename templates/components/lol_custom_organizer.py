@@ -99,7 +99,7 @@ def _member_card(page: ft.Page, summoner: Summoner):
         page.reload()
         page.open(ft.SnackBar(content=ft.Text(msg)))
         
-    text_size = page.width * 0.02
+    text_size = 20
 
     ranks_with_divisions = generate_ranks_with_divisions()
 
@@ -110,36 +110,12 @@ def _member_card(page: ft.Page, summoner: Summoner):
                     controls=[
                         ft.Image(
                             src=summoner.player_icon,
-                            width=text_size*1.5,
-                            height=text_size*1.5,
-                            border_radius=ft.border_radius.all(text_size*0.75),
+                            width=text_size*1.6,
+                            height=text_size*1.6,
+                            border_radius=ft.border_radius.all(text_size),
                         ),
-                        ft.Text(f"{summoner.summoner_name} #{summoner.tag} (", size=text_size, weight="bold"),
-                        ft.Dropdown(
-                            options=[
-                                ft.dropdown.Option(rank) for rank in ranks_with_divisions
-                            ],
-                            value=summoner.rank,
-                            width=text_size*5.6,
-                            # content_padding=0,
-                            alignment=ft.alignment.center,
-                            text_style=ft.TextStyle(size=text_size*0.75, color=ft.colors.BLACK, weight="bold"),
-                            border=ft.InputBorder.NONE,
-                            border_radius=ft.border_radius.all(text_size*0.75),
-                            on_change=lambda e, summoner=summoner: _change_rank(e, summoner),
-                        ),
-                        ft.TextField(
-                            value=summoner.lp,
-                            width=text_size,
-                            text_style=ft.TextStyle(size=text_size*0.75, color=ft.colors.BLACK, weight="bold"),
-                            border=ft.InputBorder.NONE,
-                            border_radius=ft.border_radius.all(text_size*0.75),
-                            on_blur=lambda e, summoner=summoner: _submit_lp(e, summoner),
-                        ),
-                        ft.Text(f"LP , Score: {summoner.score} ", size=text_size*0.75, weight="bold"),
-                        ft.Text(")", size=text_size, weight="bold"),
+                        ft.Text(f"{summoner.summoner_name} #{summoner.tag}", size=text_size*0.8, weight="bold"),
                     ],
-                    alignment=ft.MainAxisAlignment.START
                 ),
                 ft.Row(
                     controls=[
@@ -147,13 +123,13 @@ def _member_card(page: ft.Page, summoner: Summoner):
                             icon=ft.icons.DELETE,
                             icon_size=text_size*1.5,
                             on_click=lambda e, summoner=summoner: _delete_summoner(e, summoner),
+                            visible=False,
                         ),
                         ft.Switch(
                             value=summoner.is_active,
                             on_change= lambda e, page=page, summoner=summoner: _change_summoner_status(e, page, summoner),
                         ),
                     ],
-                    alignment=ft.MainAxisAlignment.END
                 ),
             ],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN
@@ -162,10 +138,40 @@ def _member_card(page: ft.Page, summoner: Summoner):
         border_radius=ft.border_radius.all(text_size*0.75),
         padding=ft.padding.all(text_size*0.2),
     )
+
+    subtitle = ft.Row(
+        controls=[
+            ft.Dropdown(
+                options=[
+                    ft.dropdown.Option(rank) for rank in ranks_with_divisions
+                ],
+                value=summoner.rank,
+                width=text_size*5.6,
+                # content_padding=0,
+                alignment=ft.alignment.center,
+                text_style=ft.TextStyle(size=text_size*0.75, color=ft.colors.GREY_700, weight="bold"),
+                border=ft.InputBorder.NONE,
+                border_radius=ft.border_radius.all(text_size*0.75),
+                on_change=lambda e, summoner=summoner: _change_rank(e, summoner),
+            ),
+            ft.TextField(
+                value=summoner.lp,
+                width=text_size,
+                text_style=ft.TextStyle(size=text_size*0.75, color=ft.colors.GREY_700, weight="bold"),
+                border=ft.InputBorder.NONE,
+                border_radius=ft.border_radius.all(text_size*0.75),
+                on_blur=lambda e, summoner=summoner: _submit_lp(e, summoner),
+            ),
+            ft.Text(f"LP , Score: {summoner.score} ", size=text_size*0.75, weight="bold", color=ft.colors.GREY_700),
+        ],
+    )
+
+
     champs_name = summoner.champs_name.split("|")
     champs_point = summoner.champs_point.split("|")
     _card = ft.ExpansionTile(
         title=title,
+        subtitle=subtitle,
         controls=[
             ft.Row(
                 controls=[
