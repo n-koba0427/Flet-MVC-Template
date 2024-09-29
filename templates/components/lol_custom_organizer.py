@@ -18,7 +18,7 @@ def _get_summoner_max_score(region: str="jp", summoner_name: str="naoyashiyashi"
     url = f'https://www.op.gg/summoners/{region}/{summoner_name}-{tag}'
     response = requests.get(url)
     player_icon = "https://opgg-static.akamaized.net/meta/images/profile_icons/profileIcon29.jpg?image=e_upscale,q_auto:good,f_webp,w_auto&v=1724034092925"
-    max_rank = "Unranked"
+    max_rank = "unranked"
     max_lp = 0
     max_score = 0
     if response.status_code == 200:
@@ -27,15 +27,17 @@ def _get_summoner_max_score(region: str="jp", summoner_name: str="naoyashiyashi"
         if error_msg:
             return None, None, None, None
         player_icon = soup.find('div', class_='profile-icon').find("img").get("src")
-        rank_info = soup.find('div', class_='e15k6o3w0').find("tbody")
-        rank_list = rank_info.find_all("div", class_="rank-item")
-        lp_list = rank_info.find_all("div", class_="lp")
-        for rank, lp in zip(rank_list, lp_list):
-            score = _calculate_score(rank.text.lower(), int(lp.text))
-            if score > max_score:
-                max_score = score
-                max_rank = rank.text
-                max_lp = lp.text
+        rank_base = soup.find('div', class_='e15k6o3w0')
+        if exists(rank_base):
+            rank_info = rank_base.find("tbody")
+            rank_list = rank_info.find_all("div", class_="rank-item")
+            lp_list = rank_info.find_all("div", class_="lp")
+            for rank, lp in zip(rank_list, lp_list):
+                score = _calculate_score(rank.text.lower(), int(lp.text))
+                if score > max_score:
+                    max_score = score
+                    max_rank = rank.text
+                    max_lp = lp.text
     return player_icon, max_rank, max_lp, max_score
 
 def _get_summoner_champs(region: str="jp", summoner_name: str="naoyashiyashi", tag: str="JP1", top_n: int=10):
@@ -60,7 +62,47 @@ def _change_summoner_status(e, page: ft.Page, summoner: Summoner):
     summoner.save()
     page.reload()
 
+def generate_ranks_with_divisions():
+    base_ranks = ["iron", "bronze", "silver", "gold", "platinum", "emerald", "diamond"]
+    top_ranks = ["master", "grandmaster", "challenger"]
+    ranks = ["unranked"]
+    for rank in base_ranks:
+        for division in range(4, 0, -1):
+            ranks.append(f"{rank} {division}")
+    ranks.extend(top_ranks)
+    return ranks
+
 def _member_card(page: ft.Page, summoner: Summoner):
+    def _delete_summoner(e, summoner):
+        delete_data("Summoner", summoner.id)
+        page.reload()
+
+    def _change_rank(e, summoner):
+        summoner.rank = e.control.value
+        summoner.score = _calculate_score(summoner.rank, summoner.lp)
+        summoner.save()
+        page.reload()
+
+    def _submit_lp(e, summoner):
+        value = e.control.value
+        if value.isdigit():
+            if 0 <= int(value) <= 100:
+                summoner.lp = value
+                summoner.score = _calculate_score(summoner.rank, summoner.lp)
+                summoner.save()
+                page.reload()
+                return
+            else:
+                msg = "LP must be between 0 and 100."
+        else:
+            msg = "Please enter a number."
+        page.reload()
+        page.open(ft.SnackBar(content=ft.Text(msg)))
+        
+    text_size = page.width * 0.02
+
+    ranks_with_divisions = generate_ranks_with_divisions()
+
     title = ft.Container(
         content=ft.Row(
             controls=[
@@ -68,17 +110,48 @@ def _member_card(page: ft.Page, summoner: Summoner):
                     controls=[
                         ft.Image(
                             src=summoner.player_icon,
-                            width=30,
-                            height=30,
-                            border_radius=ft.border_radius.all(15),
+                            width=text_size*1.5,
+                            height=text_size*1.5,
+                            border_radius=ft.border_radius.all(text_size*0.75),
                         ),
-                        ft.Text(f"{summoner.summoner_name} #{summoner.tag} ({summoner.rank}, {summoner.lp}LP)", size=20, weight="bold"),
+                        ft.Text(f"{summoner.summoner_name} #{summoner.tag} (", size=text_size, weight="bold"),
+                        ft.Dropdown(
+                            options=[
+                                ft.dropdown.Option(rank) for rank in ranks_with_divisions
+                            ],
+                            value=summoner.rank,
+                            width=text_size*5.6,
+                            # content_padding=0,
+                            alignment=ft.alignment.center,
+                            text_style=ft.TextStyle(size=text_size*0.75, color=ft.colors.BLACK, weight="bold"),
+                            border=ft.InputBorder.NONE,
+                            border_radius=ft.border_radius.all(text_size*0.75),
+                            on_change=lambda e, summoner=summoner: _change_rank(e, summoner),
+                        ),
+                        ft.TextField(
+                            value=summoner.lp,
+                            width=text_size,
+                            text_style=ft.TextStyle(size=text_size*0.75, color=ft.colors.BLACK, weight="bold"),
+                            border=ft.InputBorder.NONE,
+                            border_radius=ft.border_radius.all(text_size*0.75),
+                            on_blur=lambda e, summoner=summoner: _submit_lp(e, summoner),
+                        ),
+                        ft.Text(f"LP , Score: {summoner.score} ", size=text_size*0.75, weight="bold"),
+                        ft.Text(")", size=text_size, weight="bold"),
                     ],
                     alignment=ft.MainAxisAlignment.START
                 ),
                 ft.Row(
                     controls=[
-                        ft.Switch(value=summoner.is_active, on_change= lambda e, page=page, summoner=summoner: _change_summoner_status(e, page, summoner)),
+                        ft.IconButton(
+                            icon=ft.icons.DELETE,
+                            icon_size=text_size*1.5,
+                            on_click=lambda e, summoner=summoner: _delete_summoner(e, summoner),
+                        ),
+                        ft.Switch(
+                            value=summoner.is_active,
+                            on_change= lambda e, page=page, summoner=summoner: _change_summoner_status(e, page, summoner),
+                        ),
                     ],
                     alignment=ft.MainAxisAlignment.END
                 ),
@@ -86,8 +159,8 @@ def _member_card(page: ft.Page, summoner: Summoner):
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         ),
         bgcolor=ft.colors.SECONDARY_CONTAINER if summoner.is_active else ft.colors.GREY_100,
-        border_radius=ft.border_radius.all(10),
-        padding=ft.padding.all(10),
+        border_radius=ft.border_radius.all(text_size*0.75),
+        padding=ft.padding.all(text_size*0.2),
     )
     champs_name = summoner.champs_name.split("|")
     champs_point = summoner.champs_point.split("|")
@@ -100,12 +173,12 @@ def _member_card(page: ft.Page, summoner: Summoner):
                         controls=[
                             ft.Image(
                                 src=f"https://opgg-static.akamaized.net/meta/images/lol/latest/champion/{champ_name.replace(" ", "").replace("'", "")}.png?image=e_upscale,c_crop,h_103,w_103,x_9,y_9/q_auto:good,f_webp,w_160,h_160&v=1724034092925",
-                                width=50,
-                                height=50,
-                                border_radius=ft.border_radius.all(5),
+                                width=text_size*2,
+                                height=text_size*2,
+                                border_radius=ft.border_radius.all(text_size*0.5),
                             ),
-                            # ft.Text(champ_name),
-                            ft.Text(champ_point),
+                            ft.Text(champ_name, size=text_size*0.5, weight="bold"),
+                            ft.Text(champ_point, size=text_size*0.5, weight="bold"),
                         ],
                         alignment=ft.MainAxisAlignment.CENTER
                     ) for champ_name, champ_point in zip(champs_name, champs_point)

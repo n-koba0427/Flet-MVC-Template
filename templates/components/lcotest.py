@@ -15,6 +15,18 @@ def test():
         champ_point = champ.find(class_="champion-point").text
         print(champ_img, champ_point)
 
+def test_unranked():
+    url = "https://www.op.gg/summoners/jp/週刊少年ゾンビ-6070"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    rank_base = soup.find('div', class_='e15k6o3w0')
+    if rank_base is not None:
+        rank_info = rank_base.find("tbody")
+        rank_list = rank_info.find_all("div", class_="rank-item")
+        print(rank_list)
+    else:
+        print("Unranked")
+
 def get_json(url="https://ddragon.leagueoflegends.com/cdn/14.19.1/data/en_US/champion.json"):
     response = requests.get(url)
     downloadData = response.json()
@@ -66,4 +78,5 @@ def main(page: ft.Page):
     page.add(textfield, submit_button)
 
 if __name__ == "__main__":
-    ft.app(target=main)
+    # ft.app(target=main)
+    test_unranked()
