@@ -5,6 +5,7 @@ import itertools
 import random
 
 from app.utils import *
+from templates.components.basic import *
 
 def _calculate_score(rank: str, lp: str):
     tires = ["iron", "bronze", "silver", "gold", "platinum", "emerald", "diamond", "master", "grandmaster", "challenger"]
@@ -268,12 +269,47 @@ def _grouping(page: ft.Page, top_n: int = 5):
     )
     page.open(result_dialog)
 
+def _clean_text(text):
+    problematic_chars = ["\u2069", "\u2066"]
+    for problematic_char in problematic_chars:
+        text = text.replace(problematic_char, "")
+    text = text.replace("\r\n", "\n")
+    return text.split("\n")
+
+def _extract_summoner_name(join_msg):
+    join_msg_list = _clean_text(join_msg)
+    summoner_name_list = []
+    tag_list = []
+    for join_msg in join_msg_list:
+        tails = ["がロビーに参加しました。", "joined the lobby"]
+        for tail in tails:
+            if tail in join_msg:
+                join_msg = join_msg.replace(tail, "")
+                break
+        join_msg_split = join_msg.split(" #")
+        summoner_name, tag = join_msg_split
+        summoner_name_list.append(summoner_name)
+        tag_list.append(tag.replace(" ", ""))
+    return summoner_name_list, tag_list
 
 def main(page: ft.Page):
-    def _open_form(e):
+    def _open_form(e, quick_add: bool = False):
         region_field = ft.TextField(label="Region", value="jp", width=100)
         summoner_name_field = ft.TextField(label="Summoner Name", width=250)
+        tag_sharp = ft.Text("#", size=20, weight="bold")
         tag_field = ft.TextField(label="Tag", value="JP1", width=100)
+        quick_field = ft.TextField(
+            label="Please paste the lobby log here.", 
+            width=350, 
+            multiline=True, 
+            min_lines=10,
+            visible=False,
+        )
+        if quick_add:
+            quick_field.visible = True
+            summoner_name_field.visible = False
+            tag_sharp.visible = False
+            tag_field.visible = False
         
         dlg = ft.AlertDialog(
             title=ft.Text("Enter summoner name"),
@@ -284,30 +320,64 @@ def main(page: ft.Page):
                         summoner_name_field,
                         ft.Row(
                             controls=[
-                                ft.Text("#", size=20, weight="bold"),
+                                tag_sharp,
                                 tag_field,
                             ],
-                        )
+                        ),
+                        quick_field,
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN
                 ),
                 width=500,
             ),
         )
+
         def _on_ok(e):
-            region, summoner_name, tag = region_field.value, summoner_name_field.value, tag_field.value
-            if search_data_multiple("Summoner", {"region": region, "summoner_name": summoner_name, "tag": tag}):
-                page.close(dlg)
-                page.open(ft.SnackBar(content=ft.Text("Summoner already exists.")))
-                return
-            if all([region, summoner_name, tag]):
-                page.close(dlg)
-                if _add_summoner(region, summoner_name, tag):
-                    page.reload()
-                else:
-                    page.open(ft.SnackBar(content=ft.Text("Summoner not found.")))
+            page.close(dlg)
+
+            msg = ""
+            reload_flag = False
+            if quick_add:
+                region = region_field.value
+                summoner_name_list, tag_list = _extract_summoner_name(quick_field.value)
+                query = get_model_by_name("Summoner").update(is_active=False)
+                query.execute()
+                reload_flag = True
             else:
-                page.open(ft.SnackBar(content=ft.Text("Please enter all fields")))
+                region, summoner_name_list, tag_list = region_field.value, [summoner_name_field.value], [tag_field.value]
+            
+            processing_dlg = ProcessingDialog(total_count=len(summoner_name_list), message="Fetching summoner information")
+            page.open(processing_dlg.content)
+            
+            for summoner_name, tag in zip(summoner_name_list, tag_list):
+                summoner_query = search_data_multiple("Summoner", {"region": region, "summoner_name": summoner_name, "tag": tag})
+                # check if summoner already exists
+                summoner = summoner_query.first()
+                if summoner:
+                    summoner.is_active = True
+                    summoner.save()
+                    msg += f"{summoner_name}#{tag} already exists.\n"
+                # check if all fields are filled
+                else:
+                    if all([region, summoner_name, tag]):
+                        # add summoner
+                        summoner = _add_summoner(region, summoner_name, tag)
+                        if summoner:
+                            reload_flag = True
+                            msg += f"{summoner_name}#{tag} added.\n"
+                        else:
+                            msg += f"{summoner_name}#{tag} not found.\n"
+                    else:
+                        msg += "Please enter all fields.\n"
+                processing_dlg.update_progress()
+
+            page.close(processing_dlg.content)
+
+            if reload_flag:
+                page.reload()
+            page.open(ft.SnackBar(content=ft.Text(msg[:-1])))
+            
+
         def _close_dlg(e):
             page.close(dlg)
         dlg.actions = [
@@ -322,6 +392,7 @@ def main(page: ft.Page):
             ft.Row(
                 controls=[
                     ft.ElevatedButton("Add Member", on_click=_open_form),
+                    ft.ElevatedButton("Quick Add", on_click=lambda e: _open_form(e, quick_add=True)),
                     ft.ElevatedButton("Grouping", on_click=lambda e: _grouping(page)),
                 ],
             ),
@@ -329,7 +400,11 @@ def main(page: ft.Page):
         expand=True,
     )
 
-    for summoner in get_data_list("Summoner"):
+    # サモナーのリストを取得し、is_activeとscoreでソート
+    summoners = get_data_list("Summoner")
+    sorted_summoners = sorted(summoners, key=lambda s: (-s.is_active, -int(s.score)))
+
+    for summoner in sorted_summoners:
         member_cards.controls.append(
             _member_card(page, summoner)
         )

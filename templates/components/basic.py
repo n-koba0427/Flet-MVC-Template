@@ -237,3 +237,46 @@ def sample_apps_lv(page: ft.Page):
             )
         )
     return sample_apps_lv
+
+
+
+class ProcessingDialog():
+    def __init__(self, total_count, message: str="Fetching data"):
+        self.total_count = total_count
+        self.processed_count = 0
+        self.progress_bar = ft.ProgressBar(width=200, value=0)
+        self.progress_text = ft.Text("0%", size=16)
+        self.message = message
+        self.content = self._build()
+
+    def _build(self):
+        return ft.AlertDialog(
+            modal=True,
+            content=ft.Container(
+                content=ft.Column(
+                    controls=[
+                        ft.Text("Processing...", size=20, weight="bold"),
+                        ft.ProgressRing(width=50, height=50),
+                        self.progress_text,
+                        self.progress_bar,
+                        ft.Text(self.message, size=16),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=20,
+                ),
+                width=300,
+                height=250,
+                padding=20,
+                bgcolor=ft.colors.SURFACE_VARIANT,
+                border_radius=10,
+            ),
+            shape=ft.RoundedRectangleBorder(radius=10),
+        )
+
+    def update_progress(self):
+        self.processed_count += 1
+        progress = self.processed_count / self.total_count
+        self.progress_bar.value = progress
+        self.progress_text.value = f"{int(progress * 100)}%"
+        self.content.update()
