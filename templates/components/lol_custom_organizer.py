@@ -123,6 +123,7 @@ def _member_card(page: ft.Page, summoner: Summoner):
                             icon=ft.icons.DELETE,
                             icon_size=text_size*1.5,
                             on_click=lambda e, summoner=summoner: _delete_summoner(e, summoner),
+                            visible=False,
                         ),
                         ft.Switch(
                             value=summoner.is_active,
