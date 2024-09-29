@@ -123,7 +123,6 @@ def _member_card(page: ft.Page, summoner: Summoner):
                             icon=ft.icons.DELETE,
                             icon_size=text_size*1.5,
                             on_click=lambda e, summoner=summoner: _delete_summoner(e, summoner),
-                            visible=False,
                         ),
                         ft.Switch(
                             value=summoner.is_active,
@@ -138,7 +137,7 @@ def _member_card(page: ft.Page, summoner: Summoner):
         border_radius=ft.border_radius.all(text_size*0.75),
         padding=ft.padding.all(text_size*0.2),
     )
-
+    
     subtitle = ft.Row(
         controls=[
             ft.Dropdown(
@@ -166,6 +165,9 @@ def _member_card(page: ft.Page, summoner: Summoner):
         ],
     )
 
+    def _change_subtitle_visibility(e):
+        subtitle.visible = not subtitle.visible
+        subtitle.update()
 
     champs_name = summoner.champs_name.split("|")
     champs_point = summoner.champs_point.split("|")
@@ -193,7 +195,9 @@ def _member_card(page: ft.Page, summoner: Summoner):
                 spacing=20,
             ),
         ],
+        on_change=lambda e: _change_subtitle_visibility(e),
     )
+    _card.subtitle.visible = False
     return _card
 
 def _add_summoner(region: str, summoner_name: str, tag: str):
@@ -263,11 +267,11 @@ def _grouping(page: ft.Page, top_n: int = 5):
         if sum(s[1] for s in blue_team) > sum(s[1] for s in red_team):
             blue_team, red_team = red_team, blue_team
         result_txt = f"""
-【Blue Team】 (Score: {sum(s[1] for s in blue_team)})
-{"\n".join([f"• {s[0].summoner_name} ({s[0].rank}, {s[0].lp}LP, Score: {s[1]})" for s in blue_team])}
+**【Blue Team】 (Total Score: {sum(s[1] for s in blue_team)})**
+{"\n".join([f"    • **{s[0].summoner_name}**  ({s[0].rank}, {s[0].lp}LP)" for s in blue_team])}
 
-【Red Team】 (Score: {sum(s[1] for s in red_team)})
-{"\n".join([f"• {s[0].summoner_name} ({s[0].rank}, {s[0].lp}LP, Score: {s[1]})" for s in red_team])}
+**【Red Team】 (Total Score: {sum(s[1] for s in red_team)})**
+{"\n".join([f"    • **{s[0].summoner_name}**  ({s[0].rank}, {s[0].lp}LP)" for s in red_team])}
 """
         page.set_clipboard(result_txt)
         page.open(ft.SnackBar(content=ft.Text("Copied to clipboard")))
