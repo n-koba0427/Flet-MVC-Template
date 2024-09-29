@@ -194,6 +194,7 @@ def _member_card(page: ft.Page, summoner: Summoner):
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=20,
+                scroll=ft.ScrollMode.AUTO,
             ),
         ],
         on_change=lambda e: _change_subtitle_visibility(e),
