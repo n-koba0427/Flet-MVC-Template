@@ -170,6 +170,16 @@ def _member_card(page: ft.Page, summoner: Summoner):
         subtitle.visible = not subtitle.visible
         subtitle.update()
 
+    def _get_champ_icon(champ_name):
+        cleaned_champ_name = champ_name.replace(" ", "").replace("'", "").replace(".", "")
+        if cleaned_champ_name == "Wukong":
+            cleaned_champ_name = "MonkeyKing"
+        path = f"static/images/champion-icons/{cleaned_champ_name}.png"
+        if os.path.exists(path):
+            return path
+        else:
+            return f"static/images/champion-icons/_HelmetBro.png"
+
     champs_name = summoner.champs_name.split("|")
     champs_point = summoner.champs_point.split("|")
     _card = ft.ExpansionTile(
@@ -181,7 +191,7 @@ def _member_card(page: ft.Page, summoner: Summoner):
                     ft.Column(
                         controls=[
                             ft.Image(
-                                src=f"https://opgg-static.akamaized.net/meta/images/lol/latest/champion/{champ_name.replace(" ", "").replace("'", "")}.png?image=e_upscale,c_crop,h_103,w_103,x_9,y_9/q_auto:good,f_webp,w_160,h_160&v=1724034092925",
+                                src=_get_champ_icon(champ_name),
                                 width=text_size*2,
                                 height=text_size*2,
                                 border_radius=ft.border_radius.all(text_size*0.5),
@@ -472,29 +482,26 @@ def main(page: ft.Page):
         dlg.on_dismiss = _close_dlg
         page.open(dlg)
 
-    member_cards = ft.ListView(
+    action_buttons = ft.Row(
         controls=[
-            ft.Row(
-                controls=[
-                    ft.ElevatedButton("Add Member", on_click=_open_form),
-                    ft.ElevatedButton("Quick Add", on_click=lambda e: _open_form(e, quick_add=True)),
-                    ft.ElevatedButton("Grouping", on_click=lambda e: _grouping(page)),
-                ],
-            ),
+            ft.ElevatedButton("Add Member", on_click=_open_form),
+            ft.ElevatedButton("Quick Add", on_click=lambda e: _open_form(e, quick_add=True)),
+            ft.ElevatedButton("Grouping", on_click=lambda e: _grouping(page)),
         ],
-        expand=True,
     )
-
+    
     # サモナーのリストを取得し、is_activeとscoreでソート
     summoners = get_data_list("Summoner")
     sorted_summoners = sorted(summoners, key=lambda s: (-s.is_active, -int(s.score)))
 
+    
+    member_cards = ft.ListView(expand=True)
     for summoner in sorted_summoners:
         member_cards.controls.append(
             _member_card(page, summoner)
         )
 
-    return member_cards
+    return action_buttons, member_cards
     
 if __name__ == "__main__":
     print(_calculate_score("master 4", 0))

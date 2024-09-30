@@ -77,6 +77,32 @@ def main(page: ft.Page):
     submit_button = ft.ElevatedButton("Submit", on_click=submit_button_click)
     page.add(textfield, submit_button)
 
+def download_champ_img(target_name="Aatrox", target_key=None, all=False):
+    if all:
+        champs = load_champs_json()
+    elif target_key is not None:
+        champs = {target_name: {"key": target_key}}
+    else:
+        champs = get_champ(target_name)
+
+    failed_list = []
+    for name, champ_data in champs.items():
+        key = champ_data["key"]
+        img_url = f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{key}.png"
+        response = requests.get(img_url)
+        print(f"Downloading {name}...", end="")
+        # try:
+        with open(os.path.join(os.path.dirname(__file__), f"../../static/images/champion-icons/{name}.png"), "wb") as f:
+            f.write(response.content)
+        print("Done")
+        # except:
+        #     print("Failed")
+        #     failed_list.append(name)
+    print("All Done.")
+    print(f"- Failed -")
+    print(failed_list)
+
+
+
 if __name__ == "__main__":
-    # ft.app(target=main)
-    test_unranked()
+    download_champ_img(target_name="_HelmetBro", target_key="-1")

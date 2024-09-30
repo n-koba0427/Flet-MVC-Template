@@ -35,7 +35,7 @@ and add the new route to the `routes` dictionary in `urls.py`.
 import flet as ft
 from templates.components.basic import *
 from templates.components.auth import *
-from templates.components import lol_custom_organizer
+from templates.components import lol_custom_organizer, lol_pickban
 from app.utils import *
 
 
@@ -147,7 +147,13 @@ def sample_apps_view(page: ft.Page):
 
 def lol_custom_organizer_view(page: ft.Page):
     return [
-        header(page=page, title="LoL Custom Organizer"),
+        # header(page=page, title="LoL Custom Organizer"),
         breadcrumbs(page=page),
-        lol_custom_organizer.main(page=page),
+        *lol_custom_organizer.main(page=page),
+    ]
+
+def lol_pickban_view(page: ft.Page):
+    return [
+        breadcrumbs(page=page),
+        *lol_pickban.main(page=page),
     ]

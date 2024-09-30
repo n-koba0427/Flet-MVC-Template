@@ -15,6 +15,7 @@ def main(page: ft.Page):
     page.custom_auth = SaltedHashAuth()
     page.sample_apps = {
         "lol-custom-organizer": lol_custom_organizer_view,
+        "lol-pickban": lol_pickban_view,
     }
 
     page.go("/sample-apps/lol-custom-organizer")
